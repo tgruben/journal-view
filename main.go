@@ -13,7 +13,8 @@ import (
 
 func parseDate(args []string) (time.Time, error) {
 	if len(args) == 0 {
-		return time.Now().Truncate(24 * time.Hour), nil
+		now := time.Now()
+		return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()), nil
 	}
 
 	input := args[0]
@@ -75,22 +76,23 @@ func main() {
 		ui.ExitWithMessage(err)
 	}
 
-	content, _, err := fetchEntry(token, date)
-	if err != nil {
-		ui.ExitWithMessage(err)
+	// Fetch function that can retrieve any date's entry
+	fetchFn := func(d time.Time) (string, error) {
+		content, _, err := fetchEntry(token, d)
+		return content, err
 	}
 
 	if *raw {
+		content, err := fetchFn(date)
+		if err != nil {
+			ui.ExitWithMessage(err)
+		}
 		fmt.Print(content)
 		return
 	}
 
-	fetchFn := func() (string, error) {
-		return content, nil
-	}
-
 	m := ui.NewModel(date, fetchFn)
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion())
 
 	if _, err := p.Run(); err != nil {
 		ui.ExitWithMessage(fmt.Errorf("running TUI: %w", err))
