@@ -120,6 +120,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.prevDate()
 		case "right", "l":
 			return m.nextDate()
+		case "g":
+			m.viewport.GotoTop()
+			return m, nil
+		case "G":
+			m.viewport.GotoBottom()
+			return m, nil
 		default:
 			var cmd tea.Cmd
 			m.viewport, cmd = m.viewport.Update(msg)
